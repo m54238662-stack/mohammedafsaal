@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mohammed Afzal K. - 3D Animated Interactive CV</title>
+  <style>
+    :root {
+      --bg: #0a0f1d;
+      --card-bg: rgba(16, 24, 48, 0.82);
+      --card-border: rgba(99, 102, 241, 0.25);
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.45);
+      --accent: #06b6d4;
+      --accent-glow: rgba(6, 182, 212, 0.4);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --highlight: #ec4899;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      perspective: 1200px;
+    }
+
+    /* 3D Background Canvas */
+    #bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* App Wrapper */
+    .app-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 30px 20px 80px 20px;
+    }
+
+    /* Top Controls Bar */
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--card-border);
+      padding: 12px 20px;
+      border-radius: 16px;
+      margin-bottom: 25px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--primary-glow);
+    }
+
+    .btn-outline {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    .btn-outline:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .btn-mode.active {
+      background: linear-gradient(135deg, var(--accent), #0284c7);
+      box-shadow: 0 4px 14px var(--accent-glow);
+      color: #04101e;
+      font-weight: 700;
+    }
+
+    /* 3D Master Card */
+    .card-3d-wrapper {
+      transform-style: preserve-3d;
+      transition: transform 0.1s ease-out;
+      will-change: transform;
+    }
+
+    .main-cv-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(99, 102, 241, 0.15);
+      transform-style: preserve-3d;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Glass Glare Layer */
+    .card-glare {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.12), transparent 70%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Header Profile */
+    .header-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 24px;
+      margin-bottom: 28px;
+      transform: translateZ(30px);
+    }
+
+    .name-title h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 40%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    .name-title .role-tag {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .contact-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 12px;
+    }
+
+    .contact-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .contact-item a {
+      color: inherit;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .contact-item a:hover {
+      color: var(--accent);
+    }
+
+    /* 3D Floating Avatar / Hologram Sphere */
+    .holo-cube-container {
+      width: 100px;
+      height: 100px;
+      perspective: 400px;
+    }
+
+    .holo-cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      animation: rotateCube 12s infinite linear;
+    }
+
+    @keyframes rotateCube {
+      from { transform: rotateX(20deg) rotateY(0deg); }
+      to { transform: rotateX(20deg) rotateY(360deg); }
+    }
+
+    .cube-face {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border: 1.5px solid var(--accent);
+      background: rgba(6, 182, 212, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      color: white;
+      text-shadow: 0 0 10px var(--accent);
+      box-shadow: inset 0 0 15px rgba(6, 182, 212, 0.3);
+    }
+
+    .cube-front  { transform: rotateY(  0deg) translateZ(50px); }
+    .cube-back   { transform: rotateY(180deg) translateZ(50px); }
+    .cube-right  { transform: rotateY( 90deg) translateZ(50px); }
+    .cube-left   { transform: rotateY(-90deg) translateZ(50px); }
+    .cube-top    { transform: rotateX( 90deg) translateZ(50px); }
+    .cube-bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+    /* Content Sections */
+    .section-3d {
+      margin-bottom: 28px;
+      transform: translateZ(25px);
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(6, 182, 212, 0.4), transparent);
+    }
+
+    .summary-text {
+      font-size: 14.5px;
+      color: #cbd5e1;
+      line-height: 1.7;
+      text-align: justify;
+    }
+
+    /* 3D Interactive Tiles / Grid */
+    .grid-3d {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .tile-3d {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 18px 20px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .tile-3d:hover {
+      transform: translateY(-4px) translateZ(15px);
+      border-color: var(--primary);
+      background: rgba(30, 41, 59, 0.85);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(99, 102, 241, 0.2);
+    }
+
+    .tile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+
+    .tile-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .tile-sub {
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .tile-date {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    ul.clean-list {
+      list-style: none;
+      margin-top: 8px;
+    }
+
+    ul.clean-list li {
+      position: relative;
+      padding-left: 18px;
+      font-size: 13px;
+      color: #cbd5e1;
+      line-height: 1.55;
+      margin-bottom: 6px;
+    }
+
+    ul.clean-list li::before {
+      content: "▹";
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+      font-size: 14px;
+    }
+
+    /* Skills Pill Cloud */
+    .skills-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill-skill {
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #c7d2fe;
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .pill-skill:hover {
+      transform: translateY(-2px) scale(1.05);
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .pill-3d {
+      background: rgba(6, 182, 212, 0.12);
+      border-color: rgba(6, 182, 212, 0.3);
+      color: #a5f3fc;
+    }
+
+    .pill-3d:hover {
+      background: var(--accent);
+      color: #04101e;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* 3D Wireframe Canvas simulation for Smart Wheelchair */
+    .canvas-sim-box {
+      margin-top: 10px;
+      height: 130px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .canvas-sim-box canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .sim-tag {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--accent);
+      background: rgba(0, 0, 0, 0.5);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white !important;
+        color: #111827 !important;
+      }
+      #bg-canvas, .top-bar, .holo-cube-container, .canvas-sim-box, .card-glare {
+        display: none !important;
+      }
+      .main-cv-card {
+        background: white !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        transform: none !important;
+      }
+      .name-title h1 {
+        background: none !important;
+        -webkit-text-fill-color: #111827 !important;
+        color: #111827 !important;
+      }
+      .name-title .role-tag, .section-title, .tile-sub {
+        color: #2563eb !important;
+      }
+      .section-3d, .card-3d-wrapper {
+        transform: none !important;
+      }
+      .tile-3d {
+        background: transparent !important;
+        border: 1px solid #e5e7eb !important;
+        color: #111827 !important;
+        transform: none !important;
+      }
+      .tile-title {
+        color: #111827 !important;
+      }
+      ul.clean-list li, .summary-text {
+        color: #374151 !important;
+      }
+      .pill-skill {
+        background: #f1f5f9 !important;
+        color: #1e293b !important;
+        border-color: #cbd5e1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background 3D Dynamic Particle Mesh Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="app-container">
+    
+    <!-- Top Action Bar -->
+    <div class="top-bar">
+      <div class="badge-live">
+        <span class="pulse-dot"></span>
+        <span id="liveStatus">Interactive 3D Space &bull; Move mouse to tilt</span>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline btn-mode active" id="btnTechMode" onclick="setProfileMode('tech')">
+          ⚡ Python &amp; ECE Mode
+        </button>
+        <button class="btn btn-outline btn-mode" id="btn3DMode" onclick="setProfileMode('anim3d')">
+          🎨 3D &amp; Graphics Mode
+        </button>
+        <button class="btn btn-outline" id="toggleTiltBtn" onclick="toggleTilt()">
+          🧊 3D Tilt: ON
+        </button>
+        <button class="btn" onclick="window.print()">
+          🖨️ Print / Save PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- 3D Tilting Card Wrapper -->
+    <div class="card-3d-wrapper" id="cardWrapper">
+      <div class="main-cv-card" id="mainCard">
+        <div class="card-glare" id="cardGlare"></div>
+
+        <!-- Header -->
+        <header class="header-grid">
+          <div class="name-title">
+            <h1>MOHAMMED AFZAL K.</h1>
+            <div class="role-tag" id="profileRole">
+              <span id="roleIcon">🚀</span>
+              <span id="roleText">Python Developer &bull; Electronics &amp; Communication Engineer</span>
+            </div>
+            <div class="contact-row">
+              <span class="contact-item">📍 Trivandrum, Kerala, India</span>
+              <span class="contact-item">📞 +91 8714254410</span>
+              <span class="contact-item">✉️ <a href="mailto:m54238662@gmail.com">m54238662@gmail.com</a></span>
+              <span class="contact-item">🔗 <a href="https://linkedin.com" target="_blank">LinkedIn</a></span>
+              <span class="contact-item">💻 <a href="https://github.com/m54238662-stack" target="_blank">GitHub</a></span>
+            </div>
+          </div>
+
+          <!-- 3D Holographic Rotating Cube Face -->
+          <div class="holo-cube-container">
+            <div class="holo-cube">
+              <div class="cube-face cube-front">AFZAL</div>
+              <div class="cube-face cube-back">PYTHON</div>
+              <div class="cube-face cube-right">3D/IoT</div>
+              <div class="cube-face cube-left">B.TECH</div>
+              <div class="cube-face cube-top">ECE</div>
+              <div class="cube-face cube-bottom">AI/2026</div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Professional Summary -->
+        <section class="section-3d">
+          <h2 class="section-title">Professional Summary</h2>
+          <p class="summary-text" id="summaryContent">
+            Proactive B.Tech graduate in <strong>Electronics &amp; Communication Engineering</strong> with deep technical interest in Python programming, embedded IoT systems (Raspberry Pi/microcontrollers), sensor fusion (LiDAR, Bluetooth), and digital multimedia. Proven hands-on capability architecting the <em>Smart Wheelchair</em> assistive system with real-time obstacle avoidance and mobile telemetry. Adaptable, analytical, and eager to contribute to innovative software development, embedded robotics, or creative 3D technical pipelines.
+          </p>
+        </section>
+
+        <!-- Technical & 3D Skills -->
+        <section class="section-3d">
+          <h2 class="section-title" id="skillsSectionTitle">Technical &amp; Creative Skills</h2>
+          <div class="skills-cloud" id="skillsContainer">
+            <!-- Dynamically populated based on mode -->
+          </div>
+        </section>
+
+        <!-- Projects with 3D Simulation Box -->
+        <section class="section-3d">
+          <h2 class="section-title">Featured Projects</h2>
+          <div class="grid-3d">
+            
+            <!-- Project 1: Smart Wheelchair -->
+            <div class="tile-3d">
+              <div class="tile-header">
+                <div>
+                  <div class="tile-title">Smart Wheelchair: Sensor-Driven Autonomous Mobility</div>
+                  <div class="tile-sub">Capstone Engineering Project</div>
+                </div>
+                <span class="tile-date">2024 &ndash; 2025</span>
+              </div>
+              <ul class="clean-list">
+                <li>Engineered an assistive mobility system incorporating <strong>LiDAR 3D point-cloud / proximity detection</strong> to automate obstacle avoidance in real-time.</li>
+                <li>Built Bluetooth wireless telemetry connecting controller hardware with a smartphone application for remote steering and telemetry logging.</li>
+                <li>Scripted core micro-controller algorithms in <strong>Python on Raspberry Pi</strong>, optimizing sensor polling intervals and response latency.</li>
+              </ul>
+              
+              <!-- Mini 3D Wireframe Radar simulation -->
+              <div class="canvas-sim-box">
+                <span class="sim-tag">LiDAR 3D Obstacle Scanning Radar</span>
+                <canvas id="lidarCanvas"></canvas>
+              </div>
+            </div>
+
+            <!-- Project 2: Automation / 3D Graphics pipeline -->
+            <div class="tile-3d" id="project2Tile">
+              <div class="tile-header">
+                <div>
+                  <div class="tile-title" id="proj2Title">Python Automation &amp; Data Pipeline</div>
+                  <div class="tile-sub" id="proj2Sub">Data Analytics &amp; Tooling</div>
+                </div>
+                <span class="tile-date">2024</span>
+              </div>
+              <ul class="clean-list" id="proj2List">
+                <li>Developed modular Python utilities to ingest, clean, and validate sensor and structured data streams.</li>
+                <li>Implemented CRUD database transactions with SQLite/MySQL backends to catalog telemetry logs.</li>
+                <li>Automated report synthesis, converting raw numerical inputs into visual analytical graphs.</li>
+              </ul>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Experience & Education Grid -->
+        <div class="grid-3d">
+          
+          <!-- Experience -->
+          <section class="section-3d">
+            <h2 class="section-title">Experience &amp; Training</h2>
+            <div class="tile-3d">
+              <div class="tile-header">
+                <div>
+                  <div class="tile-title">JBM Auto Private Limited</div>
+                  <div class="tile-sub">Engineering Intern / Technical Trainee</div>
+                </div>
+                <span class="tile-date">Industrial Site</span>
+              </div>
+              <ul class="clean-list">
+                <li>Acquired direct exposure to automated manufacturing assemblies, industrial robotics, and sensor-driven quality control.</li>
+                <li>Assisted technical teams in system inspections, operational reporting, and digital process verification.</li>
+                <li>Applied disciplined documentation and teamwork standards in a high-efficiency automotive engineering facility.</li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- Education -->
+          <section class="section-3d">
+            <h2 class="section-title">Education</h2>
+            <div class="tile-3d">
+              <div class="tile-header">
+                <div>
+                  <div class="tile-title">B.Tech &mdash; Electronics &amp; Communication</div>
+                  <div class="tile-sub">Mohandas College of Engineering &amp; Technology</div>
+                </div>
+                <span class="tile-date">2022 &ndash; 2026</span>
+              </div>
+              <p style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">
+                APJ Abdul Kalam Technological University, Kerala
+              </p>
+
+              <div style="margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+                <div class="tile-header">
+                  <div class="tile-title" style="font-size: 13.5px;">Higher Secondary &bull; SSLC</div>
+                  <span class="tile-date">2022 | 2020</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                  H. C. H. M. Memorial School &bull; Govt Central High School, Trivandrum
+                </p>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- Certifications & Languages -->
+        <section class="section-3d" style="margin-bottom: 0;">
+          <h2 class="section-title">Certifications &amp; Core Competencies</h2>
+          <div class="grid-3d">
+            <div class="tile-3d">
+              <div class="tile-title" style="font-size: 14px; margin-bottom: 6px;">🏅 Certifications</div>
+              <ul class="clean-list">
+                <li><strong>Mastering Raspberry Pi with Python</strong> &mdash; Embedded Systems &amp; Hardware Control</li>
+                <li><strong>Diploma in Graphics &amp; Multilingual DTP</strong> &mdash; Digital Publishing, Layouts &amp; Visual Design</li>
+              </ul>
+            </div>
+            <div class="tile-3d">
+              <div class="tile-title" style="font-size: 14px; margin-bottom: 6px;">🌐 Languages &amp; Strengths</div>
+              <p style="font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+                <strong>Languages:</strong> English, Malayalam (Native), Hindi, Tamil.<br>
+                <strong>Strengths:</strong> Hardware-Software Bridge, Fast Learning Curve, 3D Spatial Visualization, Team Collaboration.
+              </p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* =====================================================================
+       1. 3D Tilt & Parallax Physics Engine (Vanilla JS, Zero Libs)
+       ===================================================================== */
+    const cardWrapper = document.getElementById('cardWrapper');
+    const mainCard = document.getElementById('mainCard');
+    const cardGlare = document.getElementById('cardGlare');
+    let tiltEnabled = true;
+
+    function handleMouseMove(e) {
+      if (!tiltEnabled) return;
+      const rect = mainCard.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const rotateX = ((y - centerY) / centerY) * -7; // max 7 deg
+      const rotateY = ((x - centerX) / centerX) * 7;
+
+      cardWrapper.style.transform = `rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
+      
+      // Dynamic glare follow
+      const glareX = (x / rect.width) * 100;
+      const glareY = (y / rect.height) * 100;
+      cardGlare.style.background = `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.15), transparent 60%)`;
+    }
+
+    function handleMouseLeave() {
+      if (!tiltEnabled) return;
+      cardWrapper.style.transform = `rotateX(0deg) rotateY(0deg)`;
+      cardGlare.style.background = `radial-gradient(circle at 50% 0%, rgba(255,255,255,0.12), transparent 70%)`;
+    }
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseleave', handleMouseLeave);
+
+    function toggleTilt() {
+      tiltEnabled = !tiltEnabled;
+      const btn = document.getElementById('toggleTiltBtn');
+      if (tiltEnabled) {
+        btn.innerHTML = '🧊 3D Tilt: ON';
+        document.getElementById('liveStatus').innerText = 'Interactive 3D Space • Move mouse to tilt';
+      } else {
+        btn.innerHTML = '🧊 3D Tilt: OFF';
+        cardWrapper.style.transform = 'none';
+        document.getElementById('liveStatus').innerText = 'Static Flat Mode Enabled';
+      }
+    }
+
+    /* =====================================================================
+       2. Dynamic Background 3D Floating Particles & Polyhedra Canvas
+       ===================================================================== */
+    const bgCanvas = document.getElementById('bg-canvas');
+    const bgCtx = bgCanvas.getContext('2d');
+    let width = bgCanvas.width = window.innerWidth;
+    let height = bgCanvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = bgCanvas.width = window.innerWidth;
+      height = bgCanvas.height = window.innerHeight;
+    });
+
+    const particles = [];
+    const count = 45;
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        z: Math.random() * 800 + 200,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        rot: Math.random() * Math.PI,
+        rotSpeed: (Math.random() - 0.5) * 0.02,
+        size: Math.random() * 4 + 2
+      });
+    }
+
+    function drawBg() {
+      bgCtx.clearRect(0, 0, width, height);
+
+      // Draw faint connections
+      bgCtx.strokeStyle = 'rgba(99, 102, 241, 0.08)';
+      bgCtx.lineWidth = 1;
+      for (let i = 0; i < count; i++) {
+        for (let j = i + 1; j < count; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            bgCtx.beginPath();
+            bgCtx.moveTo(particles[i].x, particles[i].y);
+            bgCtx.lineTo(particles[j].x, particles[j].y);
+            bgCtx.stroke();
+          }
+        }
+      }
+
+      // Draw floating nodes & 3D rotating diamonds
+      for (let p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.rotSpeed;
+
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height;
+        if (p.y > height) p.y = 0;
+
+        bgCtx.save();
+        bgCtx.translate(p.x, p.y);
+        bgCtx.rotate(p.rot);
+        bgCtx.fillStyle = 'rgba(6, 182, 212, 0.35)';
+        bgCtx.shadowColor = '#06b6d4';
+        bgCtx.shadowBlur = 8;
+
+        // Draw diamond
+        bgCtx.beginPath();
+        bgCtx.moveTo(0, -p.size * 1.5);
+        bgCtx.lineTo(p.size, 0);
+        bgCtx.lineTo(0, p.size * 1.5);
+        bgCtx.lineTo(-p.size, 0);
+        bgCtx.closePath();
+        bgCtx.fill();
+        bgCtx.restore();
+      }
+
+      requestAnimationFrame(drawBg);
+    }
+    requestAnimationFrame(drawBg);
+
+    /* =====================================================================
+       3. LiDAR 3D Rotating Radar Simulation Canvas
+       ===================================================================== */
+    const lidarCanvas = document.getElementById('lidarCanvas');
+    const lCtx = lidarCanvas.getContext('2d');
+    let angle = 0;
+    const obstacles = [
+      { r: 40, theta: 0.8 },
+      { r: 70, theta: 2.1 },
+      { r: 50, theta: 3.9 },
+      { r: 85, theta: 5.2 }
+    ];
+
+    function drawLidar() {
+      const w = lidarCanvas.width = lidarCanvas.clientWidth;
+      const h = lidarCanvas.height = lidarCanvas.clientHeight;
+      const cx = w / 2;
+      const cy = h / 2;
+
+      lCtx.clearRect(0, 0, w, h);
+
+      // Radar rings
+      lCtx.strokeStyle = 'rgba(99, 102, 241, 0.25)';
+      lCtx.lineWidth = 1;
+      [30, 60, 90].forEach(r => {
+        lCtx.beginPath();
+        lCtx.arc(cx, cy, r, 0, Math.PI * 2);
+        lCtx.stroke();
+      });
+
+      // Crosshairs
+      lCtx.beginPath();
+      lCtx.moveTo(cx - 95, cy); lCtx.lineTo(cx + 95, cy);
+      lCtx.moveTo(cx, cy - 60); lCtx.lineTo(cx, cy + 60);
+      lCtx.stroke();
+
+      // Rotating Sweep Line
+      angle += 0.035;
+      const sweepX = cx + Math.cos(angle) * 90;
+      const sweepY = cy + Math.sin(angle) * 90;
+
+      const grad = lCtx.createRadialGradient(cx, cy, 5, cx, cy, 95);
+      grad.addColorStop(0, 'rgba(6, 182, 212, 0.4)');
+      grad.addColorStop(1, 'rgba(6, 182, 212, 0)');
+
+      lCtx.beginPath();
+      lCtx.moveTo(cx, cy);
+      lCtx.arc(cx, cy, 90, angle - 0.5, angle);
+      lCtx.closePath();
+      lCtx.fillStyle = grad;
+      lCtx.fill();
+
+      // Draw obstacle blips
+      obstacles.forEach(o => {
+        const ox = cx + Math.cos(o.theta) * o.r;
+        const oy = cy + Math.sin(o.theta) * o.r;
+        lCtx.fillStyle = '#ec4899';
+        lCtx.shadowColor = '#ec4899';
+        lCtx.shadowBlur = 6;
+        lCtx.beginPath();
+        lCtx.arc(ox, oy, 3.5, 0, Math.PI * 2);
+        lCtx.fill();
+      });
+
+      requestAnimationFrame(drawLidar);
+    }
+    requestAnimationFrame(drawLidar);
+
+    /* =====================================================================
+       4. Profile Mode Switcher (Tech vs 3D Animation & Multimedia)
+       ===================================================================== */
+    const techSkills = [
+      { name: "Python 3 (OOP & Scripting)", type: "tech" },
+      { name: "C++", type: "tech" },
+      { name: "Raspberry Pi", type: "tech" },
+      { name: "LiDAR Integration", type: "tech" },
+      { name: "Bluetooth / RF Telemetry", type: "tech" },
+      { name: "SQL (MySQL / SQLite)", type: "tech" },
+      { name: "HTML5 / CSS3", type: "tech" },
+      { name: "Git & GitHub", type: "tech" },
+      { name: "VS Code", type: "tech" },
+      { name: "Sensors & Actuators", type: "tech" },
+      { name: "Adobe Photoshop", type: "3d" },
+      { name: "Desktop Publishing (DTP)", type: "3d" },
+      { name: "Tally ERP", type: "tech" }
+    ];
+
+    const animSkills = [
+      { name: "3D Asset Modeling & Prototyping", type: "3d" },
+      { name: "3D Spatial Visualization & LiDAR", type: "3d" },
+      { name: "Adobe Photoshop (Textures & Matte)", type: "3d" },
+      { name: "Diploma in Graphics & DTP", type: "3d" },
+      { name: "Python Scripting for 3D/Automation", type: "tech" },
+      { name: "Keyframe Timing & Motion Physics", type: "3d" },
+      { name: "Visual Composition & Typography", type: "3d" },
+      { name: "Hardware Telemetry & Sensor Motion", type: "tech" },
+      { name: "C++ / Embedded Logic", type: "tech" },
+      { name: "Multilingual Desktop Publishing", type: "3d" },
+      { name: "Git Version Control", type: "tech" },
+      { name: "Technical Documentation", type: "tech" }
+    ];
+
+    function renderSkills(list) {
+      const container = document.getElementById('skillsContainer');
+      container.innerHTML = list.map(s => `
+        <span class="pill-skill ${s.type === '3d' ? 'pill-3d' : ''}">
+          ${s.type === '3d' ? '🎨' : '⚡'} ${s.name}
+        </span>
+      `).join('');
+    }
+
+    function setProfileMode(mode) {
+      const btnTech = document.getElementById('btnTechMode');
+      const btn3D = document.getElementById('btn3DMode');
+      const roleText = document.getElementById('roleText');
+      const roleIcon = document.getElementById('roleIcon');
+      const summary = document.getElementById('summaryContent');
+      const skillsTitle = document.getElementById('skillsSectionTitle');
+
+      const proj2Title = document.getElementById('proj2Title');
+      const proj2Sub = document.getElementById('proj2Sub');
+      const proj2List = document.getElementById('proj2List');
+
+      if (mode === 'anim3d') {
+        btn3D.classList.add('active');
+        btnTech.classList.remove('active');
+
+        roleIcon.innerText = '🎬';
+        roleText.innerText = '3D Animation, Creative Technologist & Graphic Designer';
+        skillsTitle.innerText = '3D Animation, Graphics & Visual Pipeline Skills';
+        
+        summary.innerHTML = `
+          Creative Technologist and B.Tech graduate in <strong>Electronics &amp; Communication Engineering</strong> with specialized training in <strong>Graphics, 3D Spatial Systems, and Multilingual Desktop Publishing (DTP)</strong>. Possesses a unique blend of visual artistry and technical Python scripting, with real-world application building 3D LiDAR spatial mapping for the <em>Smart Wheelchair</em>. Skilled in digital asset creation, Adobe Photoshop, motion logic, and technical animation workflows.
+        `;
+
+        proj2Title.innerText = 'Digital Graphics, Layouts & Visual Media Portfolio';
+        proj2Sub.innerText = 'Creative Design & Desktop Publishing';
+        proj2List.innerHTML = `
+          <li>Designed multilingual vector graphics, typography layouts, and commercial digital assets using Adobe Photoshop and DTP tools.</li>
+          <li>Applied color theory, lighting balance, and visual hierarchy principles for high-resolution print and screen media.</li>
+          <li>Integrated automated Python scripts to batch-process image rendering and export production-ready asset packages.</li>
+        `;
+
+        renderSkills(animSkills);
+      } else {
+        btnTech.classList.add('active');
+        btn3D.classList.remove('active');
+
+        roleIcon.innerText = '🚀';
+        roleText.innerText = 'Python Developer • Electronics & Communication Engineer';
+        skillsTitle.innerText = 'Technical & Programming Skills';
+
+        summary.innerHTML = `
+          Proactive B.Tech graduate in <strong>Electronics &amp; Communication Engineering</strong> with deep technical interest in Python programming, embedded IoT systems (Raspberry Pi/microcontrollers), sensor fusion (LiDAR, Bluetooth), and digital multimedia. Proven hands-on capability architecting the <em>Smart Wheelchair</em> assistive system with real-time obstacle avoidance and mobile telemetry. Adaptable, analytical, and eager to contribute to innovative software development, embedded robotics, or creative 3D technical pipelines.
+        `;
+
+        proj2Title.innerText = 'Python Automation & Data Pipeline';
+        proj2Sub.innerText = 'Data Analytics & Tooling';
+        proj2List.innerHTML = `
+          <li>Developed modular Python utilities to ingest, clean, and validate sensor and structured data streams.</li>
+          <li>Implemented CRUD database transactions with SQLite/MySQL backends to catalog telemetry logs.</li>
+          <li>Automated report synthesis, converting raw numerical inputs into visual analytical graphs.</li>
+        `;
+
+        renderSkills(techSkills);
+      }
+    }
+
+    // Default init
+    setProfileMode('tech');
+  </script>
+</body>
+</html>
